@@ -1,0 +1,25 @@
+<style>*{cursor:url('cursor16.png'),auto !important;-webkit-font-smoothing:none;-moz-osx-font-smoothing:grayscale;}::-webkit-scrollbar{width:16px;height:16px;background-color:#ffffff;}::-webkit-scrollbar-thumb{background-color:#808080;}::-webkit-scrollbar-thumb:hover{background-color:#808080;}::-webkit-scrollbar,::-webkit-scrollbar-thumb,::-webkit-scrollbar-track{cursor:url('cursor16.png'),auto !important;}</style> <!-- ONE LINER FOR THE AESTHETIC -->
+<div id="canvas" style="position:absolute;top:0%;left:0%;height:100%;width:100%;pointer-events:none;"></div>
+<script>
+let isPressed = false;
+let mouseX = 0;
+let mouseY = 0;
+window.addEventListener('mousemove', (event) => {
+	mouseX = event.clientX;
+	mouseY = event.clientY;
+});
+window.addEventListener('mousedown', () => {
+	if (!isPressed) {
+		isPressed = true;
+		requestAnimationFrame(updateLoop);
+	}
+});
+window.addEventListener('mouseup', () => {
+	isPressed = false;
+});
+function updateLoop() {
+	if (!isPressed) return;
+  document.getElementById("canvas").innerHTML += `<div style="position:absolute; top:${mouseY}px; left:${mouseX}px; height:15px; width:15px; background-color:#000000;"></div>`;
+	requestAnimationFrame(updateLoop);
+}
+</script>

@@ -1,0 +1,95 @@
+<style>
+	img{
+		image-rendering:crisp-edges;
+	}
+*{cursor:url('cursor16.png'),auto !important;overflow:hidden;-webkit-font-smoothing:none;-moz-osx-font-smoothing:grayscale;}}
+</style>
+<body style="background-image:url('clouds2.png');background-size:cover;" id="body">
+<div style="background-color:#808080;position:absolute;width:100%;height:7%;top:93%;left:0%;align-items:center;display:flex;justify-content:flex-end;">
+	<p id="time" style="color:#000000;font-size:2vw;text-align:right;padding-right:1%"></p>
+</div>
+<img src="notepad32.gif" style="position:absolute;height:7%;top:1%;left:1%;cursor:pointer;" onclick="openwindow('texteditor.html','Notepad')">
+<img src="paint.png" style="position:absolute;height:7%;top:1%;left:7%;cursor:pointer;" onclick="openwindow('paint.html','Paint')">
+<img src="minesweeper.png" style="position:absolute;height:7%;top:9%;left:1%;cursor:pointer;" onclick="openwindow('minesweeper.html','Minesweeper')">
+<img src="cyandows.png" style="position:absolute;height:7%;top:9%;left:7%;cursor:pointer;" onclick="openwindow('index.html','Cyandows VM')">
+<img src="info32.gif" style="position:absolute;height:7%;top:17%;left:1%;cursor:pointer;" onclick="openwindow('info.html','OS Information')">
+<img src="song.png" style="position:absolute;height:7%;top:17%;left:7%;cursor:pointer;" onclick="openwindow('song.html','Music Player')">
+
+<img src="calculator95.png" style="position:absolute;height:7%;top:26%;left:1%;cursor:pointer;" onclick="openwindow('calculator.html','Calculator')">
+<img src="grass.png" style="position:absolute;height:7%;top:35%;left:1%;cursor:pointer;" onclick="openwindow('craft.html','Cyancraft')">
+<img src="chrome32.gif" style="position:absolute;height:7%;top:44%;left:1%;cursor:pointer;" onclick="openwindow('fakeinternet.html','Chrome')">
+<img src="startmenu.png" style="position:absolute;height:7%;width:7%;top:93%;left:0%;" onclick="toggle('startmenu')">
+<div id="startmenu" style="display:none;position:absolute;width:15%;height:38%;top:55%;left:0%;background-color:#808080;"></div>
+<script>
+var windows = 1;
+function openwindow(x,y){
+	windows++;
+ const windowEl = document.createElement("div");
+ const xpos = 25;
+	const ypos = 20;
+	windowEl.id = "group"+windows;
+	windowEl.style.position = "absolute";
+	windowEl.style.top = ypos + "%";
+	windowEl.style.left = xpos + "%";
+	windowEl.style.width = "35%";
+	windowEl.style.height = "40%";
+	windowEl.innerHTML = 
+"<div id='header" + windows + "' style='background-color:#0000FF;color:#ffffff;position:absolute;width:100%;height:16.6%;cursor:move;'>" +
+"<p style='padding-left:1%;padding-top:0.5%;font-size:2vw;margin:0;'>" + y + "</p>" +
+"</div>" +
+"<div style='background-color:#FFFFFF;position:absolute;width:100%;height:83.4%;top:16.6%;'>" +
+"<iframe style='position:absolute;top:0;left:0;width:100%;height:100%;' src=\""+x+"\" frameborder='0'></iframe>" +
+"</div>" +
+"<img src='x.png' style='position:absolute;height:16.3%;top:0;right:0;cursor:pointer;' onclick='closewindow(\""+windows+"\")'>";
+ document.getElementById("body").appendChild(windowEl);
+ dragElement(windowEl, windows);
+};
+function closewindow(x){
+ const toremove = document.getElementById("group"+x);
+ if(toremove) toremove.remove();
+};
+
+function dragElement(elmnt, title) {
+ var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+ const header = document.getElementById("header" + title);
+ header.onmousedown = dragMouseDown;
+ function dragMouseDown(e) {
+  e = e || window.event;
+		e.preventDefault();
+		pos3 = e.clientX;
+		pos4 = e.clientY;
+		document.onmouseup = closeDragElement;
+		document.onmousemove = elementDrag;
+  };
+	function elementDrag(e) {
+		e = e || window.event;
+		e.preventDefault();
+		pos1 = pos3 - e.clientX;
+		pos2 = pos4 - e.clientY;
+		pos3 = e.clientX;
+		pos4 = e.clientY;
+		elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+		elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+	};
+	function closeDragElement() {
+		document.onmouseup = null;
+		document.onmousemove = null;
+	};
+};
+
+const intervalId = setInterval(() => {
+	const now = new Date();
+	const hour = now.getHours();
+	const min = now.getMinutes();
+	document.getElementById("time").innerHTML = String(100+hour).slice(1,3) + ":" + String(100+min).slice(1,3)
+}, 300);
+
+function toggle(elementid){
+	if(document.getElementById(elementid).style.display == "none"){
+		document.getElementById(elementid).style.display = "block";
+	}else{
+		document.getElementById(elementid).style.display = "none";
+	}
+};
+</script>
+</body>

@@ -1,0 +1,20 @@
+<html>
+<title>Cyandows HTML</title>
+<style>
+*{cursor:url('cursor16.png'),auto !important;overflow:hidden;}}</style>
+<body>
+<group id="content">
+<button onclick="startos()">Start up</button>
+</group>
+</body>
+<script>
+const startup = new Audio("startup_lq.wav");
+	function startos(){
+ document.getElementById("content").innerHTML = "<img style='position:absolute;top:0%;left:0%;height:100%;width:100%;' src='startup.png'>";
+ startup.play();
+	setTimeout(() => {
+		document.getElementById("content").innerHTML = "<iframe style='position:absolute;top:0%;left:0%;height:100%;width:100%;' src='os.html'>";
+	}, 3100);
+}
+</script>
+</html>

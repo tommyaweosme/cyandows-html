@@ -1,0 +1,94 @@
+<!-- most of the code was written by me, but i had to pass it into an AI model multiple times, so the code is sloppified... 
+i have edited the code after the AI model edited it
+-->
+<style>*{cursor:url('cursor16.png'),auto !important;-webkit-font-smoothing:none;-moz-osx-font-smoothing:grayscale;}::-webkit-scrollbar{width:16px;height:16px;background-color:#ffffff;}::-webkit-scrollbar-thumb{background-color:#808080;}::-webkit-scrollbar-thumb:hover{background-color:#808080;}::-webkit-scrollbar,::-webkit-scrollbar-thumb,::-webkit-scrollbar-track{cursor:url('cursor16.png'),auto !important;}</style> <!-- ONE LINER FOR THE AESTHETIC -->
+<input id="height" style="width:15%;" placeholder="Height">
+<input id="width" style="width:15%;" placeholder="Width">
+<input id="mines" style="width:15%;" placeholder="M.Density"> 
+<button onclick="generate(document.getElementById('height').value,document.getElementById('width').value,document.getElementById('mines').value)">Generate</button> 
+<group id="playfield" style="display:block;"></group> 
+
+<script> 
+var flagged = {}; 
+var gameGrid = [];
+function generate(h, w, m) { 
+h = parseInt(h);
+w = parseInt(w);
+m = parseFloat(m);
+flagged = {}; 
+gameGrid = [];
+for(var i=0; i<h; i++){ 
+	gameGrid[i] = []; 
+	for(var j=0; j<w; j++){ 
+		if(Math.random() > m){ 
+			gameGrid[i][j] = "0"; 
+		} else { 
+			gameGrid[i][j] = "#"; 
+		} 
+	} 
+} 
+for (var i = 0; i < h; i++) { 
+	for (var j = 0; j < w; j++) { 
+		if (gameGrid[i][j] === "#") continue; 
+		var count = 0; 
+		for (var x = -1; x <= 1; x++) { 
+			for (var y = -1; y <= 1; y++) { 
+				var ni = i + x; 
+				var nj = j + y; 
+				if (ni >= 0 && ni < h && nj >= 0 && nj < w) { 
+					if (gameGrid[ni][nj] === "#") { 
+						count++; 
+					} 
+				} 
+			} 
+		} 
+		gameGrid[i][j] = count === 0 ? "" : count.toString(); 
+	} 
+} 
+var toputintoplayfield = ""; 
+for(var i=0; i<h; i++){ 
+	for(var j=0; j<w; j++){ 
+		var id = i + "_" + j; 
+		flagged[id] = false; 
+		toputintoplayfield += "<button id='" + id + "' style=\"background-color:#808080;position:absolute;height:"+(70/h)+"%;width:"+(80/w)+"%;top:"+(15+(i*(70/h)))+"%;left:"+(j*(80/w))+"%\" oncontextmenu='event.preventDefault(); toggleFlag(\"" + id + "\");' onclick='revealCell(" + i + "," + j + ");'></button>"; 
+	} 
+} 
+document.getElementById("playfield").innerHTML = toputintoplayfield; 
+} 
+window.toggleFlag = function(id) { 
+	var btn = document.getElementById(id); 
+	if (!btn || btn.getAttribute('data-revealed') === 'true') return; 
+
+	flagged[id] = !flagged[id]; 
+	if(flagged[id]){
+		btn.style.backgroundColor = "#ff0000";
+ }else{
+		btn.style.backgroundColor = "#808080";
+	}
+} 
+
+window.revealCell = function(r, c) { 
+	var id = r + "_" + c;
+	if (flagged[id]) return; 
+
+	var btn = document.getElementById(id); 
+	if (!btn || btn.getAttribute('data-revealed') === 'true') return; 
+
+	var value = gameGrid[r][c];
+	btn.innerHTML = value; 
+	btn.setAttribute('data-revealed', 'true'); 
+	btn.style.backgroundColor = "#ffffff";
+	if(value==1){btn.style.color = "#0000ff";}
+	if(value==2){btn.style.color = "#008000";}
+	if(value==3){btn.style.color = "#ff0000";}
+	if(value==4){btn.style.color = "#000080";}
+	if(value==5){btn.style.color = "#800000";}
+	if(value==6){btn.style.color = "#008080";}
+	if(value==7){btn.style.color = "#000000";}
+	if(value==8){btn.style.color = "#202020";}
+
+	if (value === '#') { 
+		document.getElementById('playfield').innerHTML += 'FAIL'; 
+	} 
+} 
+</script>

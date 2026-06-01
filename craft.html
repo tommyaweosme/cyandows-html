@@ -1,0 +1,213 @@
+<!-- yes i know, shamelessly AI generated... -->
+<html lang="en">
+<head>
+<style>*{cursor:url('cursor16.png'),auto !important;-webkit-font-smoothing:none;-moz-osx-font-smoothing:grayscale;}::-webkit-scrollbar{width:16px;height:16px;background-color:#ffffff;}::-webkit-scrollbar-thumb{background-color:#808080;}::-webkit-scrollbar-thumb:hover{background-color:#808080;}::-webkit-scrollbar,::-webkit-scrollbar-thumb,::-webkit-scrollbar-track{cursor:url('cursor16.png'),auto !important;}</style> <!-- ONE LINER FOR THE AESTHETIC -->
+    <meta charset="UTF-8">
+    <title>OS Voxel Engine</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; overflow: hidden; }
+    body, html { width: 100%; height: 100%; background: #1a1a1a; font-family: monospace; }
+    
+    /* Changed from object-fit: contain to fill the frame completely without borders */
+    canvas { 
+        display: block; 
+        width: 100%; 
+        height: 100%; 
+        image-rendering: pixelated; 
+        cursor: crosshair; 
+    }
+    
+    #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 4px; pointer-events: none; font-size: 12px; }
+    #hotbar { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; background: rgba(0,0,0,0.8); padding: 4px; border-radius: 4px; }
+    .slot { width: 30px; height: 30px; border: 2px solid #555; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 11px; }
+    .slot.active { border-color: #fff; background: rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+
+    <div id="ui">
+        <p>W,A,S,D | Left-Clk: Break | Right-Clk: Place</p>
+    </div>
+
+    <div id="hotbar">
+        <div class="slot active" id="slot1" style="background-color: #557a2b;">1</div>
+        <div class="slot" id="slot2" style="background-color: #735135;">2</div>
+        <div class="slot" id="slot3" style="background-color: #808080;">3</div>
+    </div>
+
+    <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Game Configuration
+const BLOCK_SIZE = 32;
+const MAP_WIDTH = 30; 
+const MAP_HEIGHT = 17;
+const GRAVITY = 0.4;
+
+// --- OFFLINE IMAGE ASSET LOADING ---
+// We instantiate standard DOM Image objects. This bypasses local file:// protocol security restrictions.
+const imgGrass = new Image();
+imgGrass.src = "grass.png";
+
+const imgDirt = new Image();
+imgDirt.src = "dirt.png";
+
+const imgStone = new Image();
+imgStone.src = "stone.png";
+
+// Updated configurations to include image trackers with color fallbacks
+const BLOCK_TYPES = {
+    1: { name: 'Grass', color: '#557a2b', img: imgGrass },
+    2: { name: 'Dirt', color: '#735135', img: imgDirt },
+    3: { name: 'Stone', color: '#808080', img: imgStone }
+};
+
+let selectedBlock = 1;
+
+const player = {
+    x: 100,
+    y: 100,
+    width: 24,
+    height: 48,
+    vx: 0,
+    vy: 0,
+    speed: 4,
+    jumpForce: -8,
+    grounded: false
+};
+
+// Generate Map Array
+const world = [];
+for (let x = 0; x < MAP_WIDTH; x++) {
+    world[x] = [];
+    for (let y = 0; y < MAP_HEIGHT; y++) {
+        let groundHeight = Math.floor(10 + Math.sin(x * 0.3) * 2);
+        if (y > groundHeight + 1) world[x][y] = 3;
+        else if (y >= groundHeight) world[x][y] = 2;
+        else if (y == groundHeight - 1) world[x][y] = 1;
+        else world[x][y] = 0;
+    }
+}
+
+// Input Controllers
+const keys = {};
+window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if(e.key === '1') { selectedBlock = 1; updateHotbar(); }
+    if(e.key === '2') { selectedBlock = 2; updateHotbar(); }
+    if(e.key === '3') { selectedBlock = 3; updateHotbar(); }
+});
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+function updateHotbar() {
+    document.querySelectorAll('.slot').forEach((s, idx) => {
+        if(idx === selectedBlock - 1) s.classList.add('active');
+        else s.classList.remove('active');
+    });
+}
+
+window.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculates cursor position relative purely to the inner rendering frame border
+    const mouseX = ((e.clientX - rect.left) / rect.width) * canvas.width;
+    const mouseY = ((e.clientY - rect.top) / rect.height) * canvas.height;
+    
+    const gridX = Math.floor(mouseX / BLOCK_SIZE);
+    const gridY = Math.floor(mouseY / BLOCK_SIZE);
+
+    if (gridX >= 0 && gridX < MAP_WIDTH && gridY >= 0 && gridY < MAP_HEIGHT) {
+        if (e.button === 0) { 
+            world[gridX][gridY] = 0; 
+        } else if (e.button === 2) { 
+            if(world[gridX][gridY] === 0) world[gridX][gridY] = selectedBlock;
+        }
+    }
+});
+
+window.addEventListener('contextmenu', e => e.preventDefault());
+
+function update() {
+    if (keys['KeyA'] || keys['ArrowLeft']) player.vx = -player.speed;
+    else if (keys['KeyD'] || keys['ArrowRight']) player.vx = player.speed;
+    else player.vx = 0;
+
+    if ((keys['KeyW'] || keys['Space'] || keys['ArrowUp']) && player.grounded) {
+        player.vy = player.jumpForce;
+        player.grounded = false;
+    }
+
+    player.vy += GRAVITY;
+    player.x += player.vx;
+    checkCollision('x');
+    player.y += player.vy;
+    player.grounded = false;
+    checkCollision('y');
+}
+
+function checkCollision(dir) {
+    for (let x = 0; x < MAP_WIDTH; x++) {
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            if (world[x][y] !== 0) {
+                let bx = x * BLOCK_SIZE;
+                let by = y * BLOCK_SIZE;
+                if (player.x < bx + BLOCK_SIZE && player.x + player.width > bx &&
+                    player.y < by + BLOCK_SIZE && player.y + player.height > by) {
+                    if (dir === 'x') {
+                        if (player.vx > 0) player.x = bx - player.width;
+                        if (player.vx < 0) player.x = bx + BLOCK_SIZE;
+                    }
+                    if (dir === 'y') {
+                        if (player.vy > 0) { player.y = by - player.height; player.vy = 0; player.grounded = true; }
+                        if (player.vy < 0) { player.y = by + BLOCK_SIZE; player.vy = 0; }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let x = 0; x < MAP_WIDTH; x++) {
+        for (let y = 0; y < MAP_HEIGHT; y++) {
+            let type = world[x][y];
+            if (type !== 0) {
+                let block = BLOCK_TYPES[type];
+                let bx = x * BLOCK_SIZE;
+                let by = y * BLOCK_SIZE;
+                
+                // If your PNG asset has completed loading, draw it. Otherwise, use the fallback solid hex color.
+                if (block.img.complete && block.img.naturalWidth !== 0) {
+                    ctx.drawImage(block.img, bx, by, BLOCK_SIZE, BLOCK_SIZE);
+                } else {
+                    ctx.fillStyle = block.color;
+                    ctx.fillRect(bx, by, BLOCK_SIZE, BLOCK_SIZE);
+                }
+                
+                // Subtle grid border so tiles look separate
+                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                ctx.strokeRect(bx, by, BLOCK_SIZE, BLOCK_SIZE);
+            }
+        }
+    }
+
+    ctx.fillStyle = '#cc0000';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
