@@ -1,13 +1,30 @@
 <style>*{cursor:url('cursor16.png'),auto !important;-webkit-font-smoothing:none;-moz-osx-font-smoothing:grayscale;}::-webkit-scrollbar{width:16px;height:16px;background-color:#ffffff;}::-webkit-scrollbar-thumb{background-color:#808080;}::-webkit-scrollbar-thumb:hover{background-color:#808080;}::-webkit-scrollbar,::-webkit-scrollbar-thumb,::-webkit-scrollbar-track{cursor:url('cursor16.png'),auto !important;}</style> <!-- ONE LINER FOR THE AESTHETIC -->
-<button style="position:absolute;left:0%;top:80%;width:50%;height:10%;" onclick="save(document.getElementById('textarea').value,document.getElementById('whattosaveas').value)">Save as</button>
+<body>
+<button style="position:absolute;left:0%;top:80%;width:50%;height:10%;" onclick="save(document.getElementById('whattosaveas').value,document.getElementById('textarea').value)">Save as</button>
 <button style="position:absolute;left:50%;top:80%;width:50%;height:10%;" onclick="load(document.getElementById('whattosaveas').value)">Load</button>
 <textarea style="position:absolute;left:0%;top:90%;width:100%;height:10%;" id="whattosaveas"></textarea>
 <textarea style="position:absolute;left:0%;top:0%;width:100%;height:80%;" id="textarea"></textarea>
+<script src="usb.js"></script>
 <script>
-function save(x,y){
-	localStorage.setItem("notepad-item-"+y,x);
+async function save() {
+    const textContent = document.getElementById('textarea').value;
+    const fileName = document.getElementById('whattosaveas').value.trim();
+    
+    if (!fileName) return;
+
+    // Tag the file so the OS knows it belongs to Cyandows
+    await StorageBridge.set("cyan_" + fileName, textContent);
+    
+    updateDirectoryList(fileName);
 }
-function load(y){
- document.getElementById("textarea").value = localStorage.getItem("notepad-item-"+y);
+
+async function load() {
+    const fileName = document.getElementById('whattosaveas').value.trim();
+    if (!fileName) return;
+
+    // Add the tag to find it in storage
+    const out = await StorageBridge.get("cyan_" + fileName);
+    document.getElementById("textarea").value = out || "";
 }
 </script>
+</body>
