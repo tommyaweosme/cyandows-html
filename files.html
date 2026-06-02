@@ -1,0 +1,60 @@
+<style>*{cursor:url('cursor16.png'),auto !important;-webkit-font-smoothing:none;-moz-osx-font-smoothing:grayscale;}::-webkit-scrollbar{width:16px;height:16px;background-color:#ffffff;}::-webkit-scrollbar-thumb{background-color:#808080;}::-webkit-scrollbar-thumb:hover{background-color:#808080;}::-webkit-scrollbar,::-webkit-scrollbar-thumb,::-webkit-scrollbar-track{cursor:url('cursor16.png'),auto !important;}</style> <!-- ONE LINER FOR THE AESTHETIC -->
+<style>
+	.file-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+		gap: 15px;
+		padding: 10px;
+	}
+</style>
+<script src="usb.js"></script>
+<body>
+	<div class="toolbar">
+		<button class="btn" onclick="refreshDirectory()">Refresh</button>
+		<button class="btn" style="margin-left: 5px;" onclick="clearStorage()">Delete All</button>
+	</div>
+	<div class="file-grid" id="dir-listing"></div>
+	<div id="preview-pane">
+		<p id="preview-title"></p><br>
+		<div id="preview-body"></div>
+	</div>
+	<script>
+		async function refreshDirectory() {
+			const grid = document.getElementById("dir-listing");
+			grid.innerHTML = ""; 
+			document.getElementById("preview-pane").style.display = "none";
+			try {
+				const allKeys = Object.keys(localStorage);
+				const userFiles = allKeys.filter(key => key.startsWith('cyan_'));
+				if (userFiles.length === 0) {
+					grid.innerHTML = "You have no files.";
+					return;
+				}
+				userFiles.forEach(fullName => {
+					const displayName = fullName.replace('cyan_', '');
+					const fileDiv = document.createElement("div");
+					fileDiv.className = "file-item";
+					fileDiv.onclick = () => viewFileContents(fullName, displayName);
+					fileDiv.innerHTML = `
+                <img src="notepad32.gif" class="file-icon">
+                <div class="file-name">${displayName}</div>
+            `;
+					grid.appendChild(fileDiv);
+				});
+			} catch (e) {
+				grid.innerHTML = `<div style="color:red;">Error accessing storage.</div>`;
+			}
+		}
+		async function viewFileContents(storageKey, displayName) {
+			const data = await StorageBridge.get(storageKey);
+			document.getElementById("preview-title").innerText = "Showing file " + displayName;
+			document.getElementById("preview-body").innerText = data || "(Empty file)";
+			document.getElementById("preview-pane").style.display = "block"
+		}
+		async function clearStorage() {
+			await StorageBridge.clear();
+			refreshDirectory();
+		}
+		window.onload = refreshDirectory;
+	</script>
+</body>
